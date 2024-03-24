@@ -1,2 +1,1 @@
-cxo
-wenas
+import numpy as np
