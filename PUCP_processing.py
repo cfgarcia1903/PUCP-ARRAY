@@ -187,10 +187,14 @@ def list_dats(path):
 def process_data(txt_path):
     ## TXT to Dataframe
     all_particles_df=txt_to_df(txt_path,xlims=xlims,ylims=ylims,inclined=False)  ## edit limits
-    
-    ## add Fiorella's and JD's Functions
+    ## Call Fiorella's Function
 
-    return None ## edit return
+    ## Declare JP's list
+
+    ## Call JD's Function
+
+
+    return None ## return the three dataframes, and the shower parameters
     
 
 ## PARAMETERS
@@ -200,49 +204,42 @@ def process_data(txt_path):
 
 data_directory = r'C:\Users\cg_h2\Documents\data_tambo\DATA'
 energy_directories = list_directories(data_directory)
+dat_list= ## list dats function (to be programmed)
 
-primaries_list=[]
-det_energies_list=[]
-det_totals_list=[]
 exceptions=[]
 count=0
-for directory_name in energy_directories:
-    print(f'{directory_name} is being processed.')
-    primary_energy=float(directory_name.split('_')[1])
-    directory_path= os.path.join(data_directory, directory_name)
+for dat in dat_list:
+    print(f'{dat} is being processed.')
     try:
-        txt_path= os.path.join(directory_path, 'data01.txt')
-        det_total_energy,det_energies = process_data(txt_path,detector_grid_list,complete_grid_list)
-        primaries_list.append(primary_energy)
-        det_energies_list.append(det_energies)
-        det_totals_list.append(det_total_energy)        
-    except:
-        print(f'\n{directory_name} Failed.')
-        exceptions.append(directory_name)
+        dat_path= os.path.join(data_directory, dat)
+        ## call process_data function
 
-    print(f'\n{directory_name} successful.')
+        ## append dataframes and shower info
+
+        print(f'\n{dat} successful.')
+    except Exception as e :
+        print(f'\n{dat} Failed.')
+        exceptions.append((dat,e))
+
+    
     count+=1
-    left=len(energy_directories)-count
-    print(f'{left} directories remaining')
+    left=len(dat_list)-count
+    print(f'{left} dats remaining')
 print('Data has been processed')
-print(f'The following exceptions have been encountered{exceptions}.')
+print(f'The following exceptions have been encountered: \n{exceptions}')
 
-if len(primaries_list)==len(det_energies_list) and len(det_energies_list)== len(det_totals_list):
+
+
+
+if len(primaries_list)==len(det_energies_list) and len(det_energies_list)== len(det_totals_list):  ##check if the amount of processed data is correct
     save_flag = input('Save data?[y/n]: ')
-    if save_flag=='y':
+    if not save_flag=='n':
         pickle_path=r'C:\Users\cg_h2\Documents\data_tambo'
-        pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
-        det_energies_path=os.path.join(pickle_path, 'det_energies.pickle')
-        det_totals_path=os.path.join(pickle_path, 'det_totals.pickle')
-
-        with open(pimaries_path, 'wb') as file:
+        ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
+        
+        with open(pimaries_path, 'wb') as file:              ## edit 
             pickle.dump(primaries_list, file)
-
-        with open(det_energies_path, 'wb') as file:
-            pickle.dump(det_energies_list, file)
-
-        with open(det_totals_path, 'wb') as file:
-            pickle.dump(det_totals_list, file)
+            
     else:
         print('Not saved')
 else:
