@@ -7,7 +7,7 @@ from datetime import timedelta
 from tqdm import tqdm
 import os
 import pickle
-
+import re
 
 ## FUNCTIONS
 def formato_tiempo(segundos):
@@ -131,7 +131,38 @@ def txt_to_df(path,xlims=None,ylims=None,inclined=True):
     return df    
 
 ### FUNCIÓN DE FIORELLA
+def get_shower_info(nombre_archivo):
+    valores_encontrados = {}
 
+    palabras_clave = ["PRMPAR = ", "PRME = ", "THETAP = ", "PHIP = "]
+
+    # Abre el archivo y lo lee línea por línea
+    with open(nombre_archivo, 'r') as archivo:
+        for linea in archivo:
+            for palabra in palabras_clave:
+                # Busca la palabra clave seguida de un número
+                if palabra in linea:
+                    # Encuentra el número al costado de la palabra clave
+                    indice_palabra = linea.index(palabra)
+                    inicio_numero = indice_palabra + len(palabra)
+                    
+                    # Busca el número después de la palabra clave
+                    numero = ""
+                    for char in linea[inicio_numero:]:
+                        if char.isdigit() or char == '.':
+                            numero += char
+                        else:
+                            break
+                    
+                    if numero:
+                        valores_encontrados[palabra] = float(numero) if '.' in numero else int(numero)
+
+    for palabra, valor in valores_encontrados.items():
+        print(f"{palabra[:-3]} {valor}")
+# Ejemplo de uso:
+nombre_archivo = "datos.txt"
+# Función (⁠｢･⁠ω⁠･⁠)⁠｢
+get_shower_info(nombre_archivo)
 
 ### LISTA DE PARTÍCULAS DE JP
 
