@@ -155,48 +155,62 @@ def get_shower_info(nombre_archivo):
                             break
                     
                     if numero:
-                        valores_encontrados[palabra] = float(numero) if '.' in numero else int(numero)
+                        valores_encontrados[palabra[:-3]] = float(numero) if '.' in numero else int(numero)
 
-    for palabra, valor in valores_encontrados.items():
-        print(f"{palabra[:-3]} {valor}")
-# Ejemplo de uso:
-nombre_archivo = "datos.txt"
-# Función (⁠｢･⁠ω⁠･⁠)⁠｢
-get_shower_info(nombre_archivo)
-
-### LISTA DE PARTÍCULAS DE JP
-
+    #for palabra, valor in valores_encontrados.items():
+    #    print(f"{palabra[:-3]} {valor}")
+    return valores_encontrados
 
 ### FUNCIÓN DE JD
-def assign_to_detector2(det_position,df,d_side=1):
-    '''
-    given a detector position and a tolerance (radius), assign_to_detector(det_position,df,tol) filters the particles that fall
-    inside that given detector and updates the dataframe of particles, assigning the
-    detector position to the 'detector' column of those entries that fall inside the detector
+def filter_geometry(all_particles_df, allowed_particles, length_triangle, a, b):
+    """
+    Apply geometric and charged particle ID filters to the dataframe of all particles using vectorized operations.
+    Adjusted to include only particle ID and time in the output for the provided data structure.
     
-    it also deletes the entries that are in the neighbourhood of the detector but do not fall inside the detector
+    Parameters:
+    all_particles_df (pd.DataFrame): Dataframe with all particle data, including 'id', 'x', 'y', and 't' columns.
+    charged_particles (list): List of charged particle IDs to filter.
+    length_triangle (float): Length of the triangle side.
+    a (float): The width of the detector.
+    b (float): The height of the detector.
     
-    the parameters are:
-    det_position:              a tuple that contains the position (x,y) of the detector
-    df:                        the DataFrame of all entries
-    tol:                       a tolerance for particle detection (radius of the detector)
-    pf_tol=(pf_tolx,pf_toly):  [IGNORE] a tolerance for a preliminary filtering of particles in a rectangular neighbourhood of the detector 
-                               (dimensions: 2*pf_tolx by 2*pf_toly) centered at the detector.
-                               it is necesary that tol<=pf_tol(both components). large values will cause problems if the rectangular
-                               neighbourhood is too big and overlaps with the bounds of other detectors 
+    Returns:
+    pd.DataFrame: Filtered dataframe with only the ID and time of particles that hit the detectors.
+    """
+    # Crear una máscara booleana para los IDs de partículas cargadas
+    mask_charged = all_particles_df['id'].isin(allowed_particles)
+
+    # Calcular las máscaras booleanas para cada detector
+    mask_d1 = ((all_particles_df['x'] >= (length_triangle / np.sqrt(3) - b / 2)) & 
+               (all_particles_df['x'] <= (length_triangle / np.sqrt(3) + b / 2)) & 
+               (all_particles_df['y'] >= -a / 2) & 
+               (all_particles_df['y'] <= a / 2))
     
-    the function returns the updated DataFrame
-                          
-    '''
-        
-    det_x,det_y=det_position
-    possible_particles_index=df.index[(df['x']<=det_x+d_side/2.0) & (df['x']>=det_x-d_side/2.0) & (df['y']<=det_y+d_side/2.0) & (df['y']>=det_y-d_side/2.0)].tolist()
-    for index in possible_particles_index:
-        df.at[index,'detector']= det_position
-    return df    
+    mask_d2 = ((all_particles_df['x'] >= (-length_triangle / (2 * np.sqrt(3)) - b / 2)) & 
+               (all_particles_df['x'] <= (-length_triangle / (2 * np.sqrt(3)) + b / 2)) & 
+               (all_particles_df['y'] >= (length_triangle / 2 - a / 2)) & 
+               (all_particles_df['y'] <= (length_triangle / 2 + a / 2)))
+    
+    mask_d3 = ((all_particles_df['x'] >= (-length_triangle / (2 * np.sqrt(3)) - b / 2)) & 
+               (all_particles_df['x'] <= (-length_triangle / (2 * np.sqrt(3)) + b / 2)) & 
+               (all_particles_df['y'] >= (-length_triangle / 2 - a / 2)) & 
+               (all_particles_df['y'] <= (-length_triangle / 2 + a / 2)))
+
+    # Aplicar la máscara de IDs cargados y las máscaras de detectores
+    all_particles_df['Detector'] = 0
+    all_particles_df.loc[mask_charged & mask_d1, 'Detector'] = 1
+    all_particles_df.loc[mask_charged & mask_d2, 'Detector'] = 2
+    all_particles_df.loc[mask_charged & mask_d3, 'Detector'] = 3
+
+    # Filtrar las filas donde 'Detector' es diferente de 0 y seleccionar solo las columnas 'id' y 't'
+    filtered_df = all_particles_df[all_particles_df['Detector'] != 0][['id', 't', 'Detector']].reset_index(drop=True)
+    df_detector_1 = filtered_df[filtered_df['Detector'] == 1].reset_index(drop=True)
+    df_detector_2 = filtered_df[filtered_df['Detector'] == 2].reset_index(drop=True)
+    df_detector_3 = filtered_df[filtered_df['Detector'] == 3].reset_index(drop=True)
+
+    return df_detector_1, df_detector_2, df_detector_3
 
 ###
-
 def list_directories(path):
     directories = []
     for name in os.listdir(path):
@@ -205,64 +219,65 @@ def list_directories(path):
             directories.append(name)
     return directories
 def list_dats(path):
-    directories = []
+    dat_list = []
     for name in os.listdir(path):
         full_path = os.path.join(path, name)
-        if os.path.isdir(full_path):
-            directories.append(name)
-    return directories
+        if full_path[-5:]=='.txt':
+            dat_list.append(name)
+    return dat_list
 
 
 
 ## PROCESS_DATA FUNCTION
-def process_data(txt_path):
+def process_data(txt_path,length_triangle,a,b):
     ## TXT to Dataframe
     all_particles_df=txt_to_df(txt_path,xlims=xlims,ylims=ylims,inclined=False)  ## edit limits
     ## Call Fiorella's Function
-
+    shower_info=get_shower_info(txt_path)
     ## Declare JP's list
-
+    allowed_particles=
     ## Call JD's Function
+    df_det1,df_det2,df_det3=filter_geometry(all_particles_df,allowed_particles,length_triangle,a,b)
 
-
-    return None ## return the three dataframes, and the shower parameters
+    return shower_info,df_det1,df_det2,df_det3 ## return the three dataframes, and the shower parameters
     
 
-## PARAMETERS
-# Paths
-# txt_path='8-12/DAT000008-inclined (2).txt'
 
 
-data_directory = r'C:\Users\cg_h2\Documents\data_tambo\DATA'
-energy_directories = list_directories(data_directory)
-dat_list= ## list dats function (to be programmed)
+if __name__ == "__main__":
+    ## DETECTOR PARAMETERS
+    a=
+    b=
+    length_triangle= 
+    ## DATA PARAMETERS
+    data_directory = r'C:\Users\cg_h2\Documents\data_tambo\DATA'
 
-exceptions=[]
-count=0
-for dat in dat_list:
-    print(f'{dat} is being processed.')
-    try:
-        dat_path= os.path.join(data_directory, dat)
-        ## call process_data function
+    ## 
+    dat_list= list_dats(data_directory)
+    exceptions=[]
+    count=0
+    all_showers_data=[]
+    for dat in dat_list:
+        print(f'{dat} is being processed.')
+        try:
+            dat_path= os.path.join(data_directory, dat)
+            ## call process_data function
+            shower_info,df_det1,df_det2,df_det3=process_data(dat_path,length_triangle,a,b)
+            ## append dataframes and shower info
+            shower_summary=[shower_info,df_det1,df_det2,df_det3]
+            all_showers_data.append(shower_summary)
+            print(f'\n{dat} successful.')
+        except Exception as e :
+            print(f'\n{dat} Failed.')
+            exceptions.append((dat,e))
 
-        ## append dataframes and shower info
+        count+=1
+        left=len(dat_list)-count
+        print(f'{left} dats remaining')
+    print('Data has been processed')
+    print(f'The following exceptions have been encountered: \n{exceptions}')
 
-        print(f'\n{dat} successful.')
-    except Exception as e :
-        print(f'\n{dat} Failed.')
-        exceptions.append((dat,e))
-
-    
-    count+=1
-    left=len(dat_list)-count
-    print(f'{left} dats remaining')
-print('Data has been processed')
-print(f'The following exceptions have been encountered: \n{exceptions}')
-
-
-
-
-if len(primaries_list)==len(det_energies_list) and len(det_energies_list)== len(det_totals_list):  ##check if the amount of processed data is correct
+        #### PENDING
     save_flag = input('Save data?[y/n]: ')
     if not save_flag=='n':
         pickle_path=r'C:\Users\cg_h2\Documents\data_tambo'
@@ -273,7 +288,7 @@ if len(primaries_list)==len(det_energies_list) and len(det_energies_list)== len(
             
     else:
         print('Not saved')
-else:
-    print('List lengths don\'t match, please debug')
+    else:
+        print('List lengths don\'t match, please debug')
 
 
