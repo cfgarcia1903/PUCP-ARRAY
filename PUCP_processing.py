@@ -97,38 +97,6 @@ def txt_to_df(path,xlims=None,ylims=None,inclined=True):
     
     return all_data
 
-    '''
-    given a detector position and a tolerance (radius), assign_to_detector(det_position,df,tol) filters the particles that fall
-    inside that given detector and updates the dataframe of particles, assigning the
-    detector position to the 'detector' column of those entries that fall inside the detector
-    
-    it also deletes the entries that are in the neighbourhood of the detector but do not fall inside the detector
-    
-    the parameters are:
-    det_position:              a tuple that contains the position (x,y) of the detector
-    df:                        the DataFrame of all entries
-    tol:                       a tolerance for particle detection (radius of the detector)
-    pf_tol=(pf_tolx,pf_toly):  [IGNORE] a tolerance for a preliminary filtering of particles in a rectangular neighbourhood of the detector 
-                               (dimensions: 2*pf_tolx by 2*pf_toly) centered at the detector.
-                               it is necesary that tol<=pf_tol(both components). large values will cause problems if the rectangular
-                               neighbourhood is too big and overlaps with the bounds of other detectors 
-    
-    the function returns the updated DataFrame
-                          
-    '''
-    if pf_tol==(None,None):
-        pf_tol=(1.01*tol,1.01*tol)
-    
-    det_x,det_y=det_position
-    pf_tolx,pf_toly=pf_tol
-    possible_particles_index=df.index[(df['x']<=det_x+pf_tolx) & (df['x']>=det_x-pf_tolx) & (df['y']<=det_y+pf_toly) & (df['y']>=det_y-pf_toly)].tolist()
-    for index in possible_particles_index:
-        x,y=df.loc[index,'x'],df.loc[index,'y']
-        if (x-det_x)**2 + (y-det_y)**2 <= tol**2:
-            df.at[index,'detector']= det_position
-        else:
-            df.drop(index, inplace=True, axis=0)
-    return df    
 
 ### FUNCIÓN DE FIORELLA
 def get_shower_info(nombre_archivo):
