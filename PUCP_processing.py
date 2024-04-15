@@ -2,26 +2,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as cl
-from timeit import default_timer
-from datetime import timedelta
-from tqdm import tqdm
 import os
 import pickle
-import re
+
 
 ## FUNCTIONS
-def formato_tiempo(segundos):
-    delta_tiempo = timedelta(seconds=segundos)
-    # Construye la cadena de tiempo
-    tiempo_formateado = f"({delta_tiempo.days})D ({delta_tiempo.seconds//3600})H ({(delta_tiempo.seconds//60)%60})M ({(delta_tiempo.seconds%60)})S"
-    return tiempo_formateado
-def imprimir_barra_de_carga(tiempo,iteracion, total, longitud=50):
-    porcentaje = int(iteracion / total * 100)
-    carga = int(iteracion / total * longitud)
-    tiempo_promedio=tiempo/iteracion
-    tiempo_faltante=(tiempo_promedio*(total-iteracion))
-    barra_de_carga = f"[{'■' * carga}{' ' * (longitud - carga)}] {porcentaje}%            REMAINING TIME: {formato_tiempo(segundos=tiempo_faltante)}"
-    print(barra_de_carga, end='\r', flush=True)
 def txt_to_df(path,xlims=None,ylims=None,inclined=True):
     # Lists to save the data
     ids = []
@@ -97,6 +82,13 @@ def txt_to_df(path,xlims=None,ylims=None,inclined=True):
     
     return all_data
 
+def list_dats(path):
+    dat_list = []
+    for name in os.listdir(path):
+        full_path = os.path.join(path, name)
+        if full_path[-5:]=='.txt':
+            dat_list.append(name)
+    return dat_list
 
 ### FUNCIÓN DE FIORELLA
 def get_shower_info(nombre_archivo):
@@ -149,6 +141,11 @@ def filter_geometry(all_particles_df, allowed_particles, length_triangle, a, b):
     mask_charged = all_particles_df['id'].isin(allowed_particles)
 
     # Calcular las máscaras booleanas para cada detector
+    mask_d0 = ((all_particles_df['x'] >=  (- b / 2)) & 
+               (all_particles_df['x'] <=  (+ b / 2)) & 
+               (all_particles_df['y'] >=  (- a / 2)) & 
+               (all_particles_df['y'] <=  (+ a / 2)))
+
     mask_d1 = ((all_particles_df['x'] >= (length_triangle / np.sqrt(3) - b / 2)) & 
                (all_particles_df['x'] <= (length_triangle / np.sqrt(3) + b / 2)) & 
                (all_particles_df['y'] >= -a / 2) & 
@@ -165,62 +162,45 @@ def filter_geometry(all_particles_df, allowed_particles, length_triangle, a, b):
                (all_particles_df['y'] <= (-length_triangle / 2 + a / 2)))
 
     # Aplicar la máscara de IDs cargados y las máscaras de detectores
-    all_particles_df['Detector'] = 0
+    all_particles_df['Detector'] = np.nan
+    all_particles_df.loc[mask_charged & mask_d0, 'Detector'] = 0
     all_particles_df.loc[mask_charged & mask_d1, 'Detector'] = 1
     all_particles_df.loc[mask_charged & mask_d2, 'Detector'] = 2
     all_particles_df.loc[mask_charged & mask_d3, 'Detector'] = 3
 
     # Filtrar las filas donde 'Detector' es diferente de 0 y seleccionar solo las columnas 'id' y 't'
-    filtered_df = all_particles_df[all_particles_df['Detector'] != 0][['id', 't', 'Detector']].reset_index(drop=True)
+    filtered_df = all_particles_df[all_particles_df['Detector'] != np.nan][['id', 't', 'Detector']].reset_index(drop=True)
+    df_detector_0 = filtered_df[filtered_df['Detector'] == 0].reset_index(drop=True)
     df_detector_1 = filtered_df[filtered_df['Detector'] == 1].reset_index(drop=True)
     df_detector_2 = filtered_df[filtered_df['Detector'] == 2].reset_index(drop=True)
     df_detector_3 = filtered_df[filtered_df['Detector'] == 3].reset_index(drop=True)
 
-    return df_detector_1, df_detector_2, df_detector_3
-
-###
-def list_directories(path):
-    directories = []
-    for name in os.listdir(path):
-        full_path = os.path.join(path, name)
-        if os.path.isdir(full_path) and not name[0]=='.':
-            directories.append(name)
-    return directories
-def list_dats(path):
-    dat_list = []
-    for name in os.listdir(path):
-        full_path = os.path.join(path, name)
-        if full_path[-5:]=='.txt':
-            dat_list.append(name)
-    return dat_list
+    return df_detector_0, df_detector_1, df_detector_2, df_detector_3
 
 
 
 ## PROCESS_DATA FUNCTION
-def process_data(txt_path,length_triangle,a,b):
+def process_data(txt_path,length_triangle,a,b,allowed_particles):
     ## TXT to Dataframe
-    all_particles_df=txt_to_df(txt_path,xlims=xlims,ylims=ylims,inclined=False)  ## edit limits
+    all_particles_df=txt_to_df(txt_path,inclined=False)  ## edit limits
     ## Call Fiorella's Function
     shower_info=get_shower_info(txt_path)
-    ## Declare JP's list
-    allowed_particles=
     ## Call JD's Function
-    df_det1,df_det2,df_det3=filter_geometry(all_particles_df,allowed_particles,length_triangle,a,b)
-
-    return shower_info,df_det1,df_det2,df_det3 ## return the three dataframes, and the shower parameters
+    df_det0,df_det1,df_det2,df_det3=filter_geometry(all_particles_df,allowed_particles,length_triangle,a,b)
+    return shower_info,df_det1,df_det2,df_det3,df_det0 ## return the three dataframes, and the shower parameters
     
-
-
 
 if __name__ == "__main__":
     ## DETECTOR PARAMETERS
-    a=
-    b=
-    length_triangle= 
-    ## DATA PARAMETERS
+    a=0.05*16
+    b=1.85
+    length_triangle= 80
+    allowed_particles=[1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195]
+
+    ## DATA FILES PARAMETERS
     data_directory = r'C:\Users\cg_h2\Documents\data_tambo\DATA'
 
-    ## 
+    ## DATA PROCESSING
     dat_list= list_dats(data_directory)
     exceptions=[]
     count=0
@@ -230,33 +210,33 @@ if __name__ == "__main__":
         try:
             dat_path= os.path.join(data_directory, dat)
             ## call process_data function
-            shower_info,df_det1,df_det2,df_det3=process_data(dat_path,length_triangle,a,b)
+            shower_info,df_det1,df_det2,df_det3,det_0=process_data(dat_path,length_triangle,a,b,allowed_particles)
             ## append dataframes and shower info
-            shower_summary=[shower_info,df_det1,df_det2,df_det3]
+            shower_summary=(shower_info,df_det1,df_det2,df_det3,det_0)
             all_showers_data.append(shower_summary)
             print(f'\n{dat} successful.')
         except Exception as e :
             print(f'\n{dat} Failed.')
             exceptions.append((dat,e))
-
         count+=1
         left=len(dat_list)-count
         print(f'{left} dats remaining')
     print('Data has been processed')
     print(f'The following exceptions have been encountered: \n{exceptions}')
 
-        #### PENDING
+    ## DATA SAVING
     save_flag = input('Save data?[y/n]: ')
     if not save_flag=='n':
-        pickle_path=r'C:\Users\cg_h2\Documents\data_tambo'
+        pickle_dir_path=r'C:\Users\cg_h2\Documents\data_tambo'
         ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
-        
-        with open(pimaries_path, 'wb') as file:              ## edit 
-            pickle.dump(primaries_list, file)
-            
+        print('Choose a name for the pickle file. It should not contain any special characters except for _ and -')
+        pickle_name=input('Input file name: ')
+        pickle_name=pickle_name+'.pickle'
+        pickle_file_path=os.path.join(pickle_dir_path,pickle_name)
+        with open(pickle_file_path, 'wb') as file:             
+            pickle.dump(all_showers_data, file)
     else:
         print('Not saved')
-    else:
-        print('List lengths don\'t match, please debug')
+
 
 
