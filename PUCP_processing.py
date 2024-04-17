@@ -86,7 +86,7 @@ def list_dats(path):
     dat_list = []
     for name in os.listdir(path):
         full_path = os.path.join(path, name)
-        if full_path[-5:]=='.txt':
+        if full_path[-4:]=='.txt':
             dat_list.append(name)
     return dat_list
 
@@ -198,8 +198,10 @@ if __name__ == "__main__":
     allowed_particles=[1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195]
 
     ## DATA FILES PARAMETERS
-    data_directory = r'C:\Users\cg_h2\Documents\data_tambo\DATA'
-
+    data_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
+    #print found directories
+    sim_dir=input('Enter the name of the directory containing the data: ')
+    data_directory=os.path.join(data_directory,sim_dir)
     ## DATA PROCESSING
     dat_list= list_dats(data_directory)
     exceptions=[]
@@ -227,10 +229,10 @@ if __name__ == "__main__":
     ## DATA SAVING
     save_flag = input('Save data?[y/n]: ')
     if not save_flag=='n':
-        pickle_dir_path=r'C:\Users\cg_h2\Documents\data_tambo'
+        pickle_dir_path=r'C:\Users\cg_h2\Documents\pucp_array\pickles'
         ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
         print('Choose a name for the pickle file. It should not contain any special characters except for _ and -')
-        pickle_name=input('Input file name: ')
+        pickle_name=input('Input file name (without the .pickle): ')
         pickle_name=pickle_name+'.pickle'
         pickle_file_path=os.path.join(pickle_dir_path,pickle_name)
         with open(pickle_file_path, 'wb') as file:             
