@@ -206,7 +206,7 @@ if __name__ == "__main__":
     sim_dir_ids=input('Enter the IDs of the directories to process (separated by comas \',\' ): ')
     sim_dir_ids=sim_dir_ids.split(',')
     sim_dir_ids=[int(dir_id) for dir_id in sim_dir_ids]
-    sim_dirs=[directories[id] for id in sim_dir_ids]
+    sim_dirs=[directories[id-1] for id in sim_dir_ids]
     print('Selected directories: ')
     print(sim_dirs)
     confirm_dirs=input('confirm_dirs [y/n]')
