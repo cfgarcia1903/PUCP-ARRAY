@@ -90,6 +90,10 @@ def list_dats(path):
             dat_list.append(name)
     return dat_list
 
+def list_directories(parent_directory):
+    directories = [d for d in os.listdir(parent_directory) if os.path.isdir(os.path.join(parent_directory, d))]
+    return directories
+
 ### FUNCIÓN DE FIORELLA
 def get_shower_info(nombre_archivo):
     valores_encontrados = {}
@@ -116,9 +120,7 @@ def get_shower_info(nombre_archivo):
                     
                     if numero:
                         valores_encontrados[palabra[:-3]] = float(numero) if '.' in numero else int(numero)
-
-    #for palabra, valor in valores_encontrados.items():
-    #    print(f"{palabra[:-3]} {valor}")
+                        
     return valores_encontrados
 
 ### FUNCIÓN DE JD
@@ -177,8 +179,6 @@ def filter_geometry(all_particles_df, allowed_particles, length_triangle, a, b):
 
     return df_detector_0, df_detector_1, df_detector_2, df_detector_3
 
-
-
 ## PROCESS_DATA FUNCTION
 def process_data(txt_path,length_triangle,a,b,allowed_particles):
     ## TXT to Dataframe
@@ -198,47 +198,63 @@ if __name__ == "__main__":
     allowed_particles=[1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195]
 
     ## DATA FILES PARAMETERS
-    data_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
+    parent_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
     #print found directories
-    sim_dir=input('Enter the name of the directory containing the data: ')
-    data_directory=os.path.join(data_directory,sim_dir)
-    ## DATA PROCESSING
-    dat_list= list_dats(data_directory)
-    exceptions=[]
-    count=0
-    all_showers_data=[]
-    for dat in dat_list:
-        print(f'{dat} is being processed.')
-        try:
-            dat_path= os.path.join(data_directory, dat)
-            ## call process_data function
-            shower_info,df_det1,df_det2,df_det3,det_0=process_data(dat_path,length_triangle,a,b,allowed_particles)
-            ## append dataframes and shower info
-            shower_summary=(shower_info,df_det1,df_det2,df_det3,det_0)
-            all_showers_data.append(shower_summary)
-            print(f'\n{dat} successful.')
-        except Exception as e :
-            print(f'\n{dat} Failed.')
-            exceptions.append((dat,e))
-        count+=1
-        left=len(dat_list)-count
-        print(f'{left} dats remaining')
-    print('Data has been processed')
-    print(f'The following exceptions have been encountered: \n{exceptions}')
-
-    ## DATA SAVING
-    save_flag = input('Save data?[y/n]: ')
-    if not save_flag=='n':
-        pickle_dir_path=r'C:\Users\cg_h2\Documents\pucp_array\pickles'
-        ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
-        print('Choose a name for the pickle file. It should not contain any special characters except for _ and -')
-        pickle_name=input('Input file name (without the .pickle): ')
-        pickle_name=pickle_name+'.pickle'
-        pickle_file_path=os.path.join(pickle_dir_path,pickle_name)
-        with open(pickle_file_path, 'wb') as file:             
-            pickle.dump(all_showers_data, file)
+    directories= list_directories(parent_directory)
+    for n,d in zip(list(range(1,len(directories)+1)),directories):
+        print(f"{n}| {d} ")
+    sim_dir_ids=input('Enter the IDs of the directories to process (separated by comas \',\' ): ')
+    sim_dir_ids=sim_dir_ids.split(',')
+    sim_dir_ids=[int(dir_id) for dir_id in sim_dir_ids]
+    sim_dirs=[directories[id] for id in sim_dir_ids]
+    print('Selected directories: ')
+    print(sim_dirs)
+    confirm_dirs=input('confirm_dirs [y/n]')
+    if confirm_dirs=='y':
+        pass
     else:
-        print('Not saved')
+        sim_dirs=[]
+
+    for sim_dir in sim_dirs:
+        print(f'{sim_dir} directory is being processed')
+        data_directory=os.path.join(parent_directory,sim_dir)
+        ## DATA PROCESSING
+        dat_list= list_dats(data_directory)
+        exceptions=[]
+        count=0
+        all_showers_data=[]
+        for dat in dat_list:
+            print(f'{dat} is being processed.')
+            try:
+                dat_path= os.path.join(data_directory, dat)
+                ## call process_data function
+                shower_info,df_det1,df_det2,df_det3,det_0=process_data(dat_path,length_triangle,a,b,allowed_particles)
+                ## append dataframes and shower info
+                shower_summary=(shower_info,df_det1,df_det2,df_det3,det_0)
+                all_showers_data.append(shower_summary)
+                print(f'\n{dat} successful.')
+            except Exception as e :
+                print(f'\n{dat} Failed.')
+                exceptions.append((dat,e))
+            count+=1
+            left=len(dat_list)-count
+            print(f'{left} dats remaining')
+        print('Data has been processed')
+        print(f'The following exceptions have been encountered: \n{exceptions}')
+
+        ## DATA SAVING
+        save_flag = input('Save data?[y/n]: ')
+        if not save_flag=='n':
+            pickle_dir_path=r'C:\Users\cg_h2\Documents\pucp_array\pickles'
+            ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
+            pickle_name=sim_dir
+            pickle_name=pickle_name+'.pickle'
+            pickle_file_path=os.path.join(pickle_dir_path,pickle_name)
+            with open(pickle_file_path, 'wb') as file:             
+                pickle.dump(all_showers_data, file)
+            print(f'pickle file saved as {pickle_file_path}')
+        else:
+            print('Not saved')
 
 
 
