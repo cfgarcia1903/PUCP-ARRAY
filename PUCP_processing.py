@@ -29,8 +29,8 @@ def txt_to_df(path,xlims=None,ylims=None,inclined=True):
 
                 # Extrae los valores que contienen 'x=', 'y=', 't=', etc.
                 id_valor = int(partes[1])
-                x_valor = float(partes[2].split('=')[1])/(100)   #en kilometros
-                y_valor = float(partes[3].split('=')[1])/(100)   #en kilometros          
+                x_valor = float(partes[2].split('=')[1])/(100)   #en metros
+                y_valor = float(partes[3].split('=')[1])/(100)   #en metros          
                 t_valor = float(partes[4].split('=')[1])
                 px_valor = float(partes[5].split('=')[1])
                 py_valor = float(partes[6].split('=')[1])
@@ -192,15 +192,19 @@ def process_data(txt_path,length_triangle,a,b,allowed_particles):
 
 if __name__ == "__main__":
     ## DETECTOR PARAMETERS
+    print('----------- ARRAY PARAMETERS -----------\n\n')
     a=0.05*16
     b=1.85
-    length_triangle= 80
-    allowed_particles=[1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195]
+    length_triangle= float(input('Enter the separation of the detectors (m): '))
+    allowed_particles=(1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195)
 
     ## DATA FILES PARAMETERS
-    parent_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
+    print('------------ DATA SELECTION ------------\n\n')
+    #parent_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
+    parent_directory = os.path.join(os.getcwd(),'data')
     #print found directories
     directories= list_directories(parent_directory)
+    print('Avaliable directories:\n')
     for n,d in zip(list(range(1,len(directories)+1)),directories):
         print(f"{n}| {d} ")
     sim_dir_ids=input('Enter the IDs of the directories to process (separated by comas \',\' ): ')
@@ -255,6 +259,8 @@ if __name__ == "__main__":
             print(f'pickle file saved as {pickle_file_path}')
         else:
             print('Not saved')
+        
+        input('press Enter to exit')
 
 
 
