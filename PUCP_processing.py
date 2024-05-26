@@ -10,14 +10,14 @@ import pickle
 def txt_to_df(path,xlims=None,ylims=None,inclined=True):
     # Lists to save the data
     ids = []
-    x_values = []
-    y_values = []
-    t_values = []
-    px_values = []
-    py_values = []
-    pz_values = []
-    ek_values = []
-    w_values = []
+    x_values   = []
+    y_values   = []
+    t_values   = []
+    px_values  = []
+    py_values  = []
+    pz_values  = []
+    ek_values  = []
+    w_values   = []
     lev_values = []
 
     # accessing the .txt
@@ -191,34 +191,38 @@ def process_data(txt_path,length_triangle,a,b,allowed_particles):
     
 
 if __name__ == "__main__":
+    
     ## DETECTOR PARAMETERS
-    print('----------- ARRAY PARAMETERS -----------\n\n')
+    print('----------- ARRAY PARAMETERS -----------\n')
     a=0.05*16
     b=1.85
     length_triangle= float(input('Enter the separation of the detectors (m): '))
     allowed_particles=(1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195)
-
+    print("")
     ## DATA FILES PARAMETERS
-    print('------------ DATA SELECTION ------------\n\n')
+    print('------------ DATA SELECTION ------------\n')
     #parent_directory = r'C:\Users\cg_h2\Documents\pucp_array\data'
-    parent_directory = os.path.join(os.getcwd(),'data')
+    parent_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)),'data')
     #print found directories
     directories= list_directories(parent_directory)
     print('Avaliable directories:\n')
     for n,d in zip(list(range(1,len(directories)+1)),directories):
         print(f"{n}| {d} ")
+    print("")
     sim_dir_ids=input('Enter the IDs of the directories to process (separated by comas \',\' ): ')
     sim_dir_ids=sim_dir_ids.split(',')
     sim_dir_ids=[int(dir_id) for dir_id in sim_dir_ids]
     sim_dirs=[directories[id-1] for id in sim_dir_ids]
+    print("")
     print('Selected directories: ')
     print(sim_dirs)
+    print("")
     confirm_dirs=input('confirm_dirs [y/n]')
     if confirm_dirs=='y':
         pass
     else:
         sim_dirs=[]
-
+    print("")
     for sim_dir in sim_dirs:
         print(f'{sim_dir} directory is being processed')
         data_directory=os.path.join(parent_directory,sim_dir)
@@ -249,7 +253,7 @@ if __name__ == "__main__":
         ## DATA SAVING
         save_flag = input('Save data?[y/n]: ')
         if not save_flag=='n':
-            pickle_dir_path=r'C:\Users\cg_h2\Documents\pucp_array\pickles'
+            pickle_dir_path=os.path.join(os.path.dirname(os.path.realpath(__file__)),'pickles')
             ## declare pickle file paths. pimaries_path=os.path.join(pickle_path, 'primaries.pickle')
             pickle_name=sim_dir
             pickle_name=pickle_name+'.pickle'
@@ -260,7 +264,7 @@ if __name__ == "__main__":
         else:
             print('Not saved')
         
-        input('press Enter to exit')
+        input('press Enter to continue')
 
 
 
