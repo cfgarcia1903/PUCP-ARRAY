@@ -177,16 +177,31 @@ def filter_geometry(all_particles_df, allowed_particles, length_triangle, a, b):
 
     return df_detector_0, df_detector_1, df_detector_2, df_detector_3
 
+## INDUCE BIAS
+def create_bias(max_bias):
+    theta = np.random.uniform(0, 2*np.pi)
+    r = max_bias*np.sqrt(np.random.uniform(0, 1))
+    x = r*np.cos(theta)
+    y = r*np.sin(theta)
+    return x,y
+
 ## PROCESS_DATA FUNCTION
-def process_data(txt_path,length_triangle,a,b,allowed_particles):
+def process_data(txt_path,length_triangle,a,b,allowed_particles,max_bias):
     ## TXT to Dataframe
     all_particles_df=txt_to_df(txt_path,inclined=False)  ## edit limits
+
+    ## Induce Bias
+    x_bias,y_bias=create_bias(max_bias)
+    all_particles_df['x']=all_particles_df['x'] + x_bias
+    all_particles_df['y']=all_particles_df['y'] + y_bias
+
     ## Call Fiorella's Function
     shower_info=get_shower_info(txt_path)
     ## Call JD's Function
     df_det0,df_det1,df_det2,df_det3=filter_geometry(all_particles_df,allowed_particles,length_triangle,a,b)
     return shower_info,df_det1,df_det2,df_det3,df_det0 ## return the three dataframes, and the shower parameters
     
+
 
 if __name__ == "__main__":
     ## USER
@@ -203,6 +218,7 @@ if __name__ == "__main__":
     a=0.05*16
     b=1.85
     length_triangle= float(input('Enter the separation of the detectors (m): '))
+    length_triangle= float(input('Enter the maximum bias for the center of the shower (m): '))
     allowed_particles=(1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195)
     print("")
     ## DATA FILES PARAMETERS
