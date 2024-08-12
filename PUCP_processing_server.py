@@ -218,7 +218,7 @@ if __name__ == "__main__":
     a=0.05*16
     b=1.85
     length_triangle= float(input('Enter the separation of the detectors (m): '))
-    length_triangle= float(input('Enter the maximum bias for the center of the shower (m): '))
+    max_bias= float(input('Enter the maximum bias for the center of the shower (m): '))
     allowed_particles=(1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 19, 21, 23, 24, 27, 29, 31, 32, 52, 53, 54, 55, 57, 58, 59, 61, 63, 64, 117, 118, 120, 121, 124, 125, 127, 128, 131, 132, 137, 138, 140, 141, 143, 149, 150, 152, 153, 155, 161, 162, 171, 172, 177, 178, 182, 183, 185, 186, 188, 189, 191, 192, 194, 195)
     print("")
     ## DATA FILES PARAMETERS
@@ -250,6 +250,7 @@ if __name__ == "__main__":
         data_directory=os.path.join(parent_directory,sim_dir)
         ## DATA PROCESSING
         dat_list= list_dats(data_directory)
+        print(f"{len(dat_list)} DAT files found")
         exceptions=[]
         count=0
         all_showers_data=[]
@@ -258,7 +259,7 @@ if __name__ == "__main__":
             try:
                 dat_path= os.path.join(data_directory, dat)
                 ## call process_data function
-                shower_info,df_det1,df_det2,df_det3,det_0=process_data(dat_path,length_triangle,a,b,allowed_particles)
+                shower_info,df_det1,df_det2,df_det3,det_0=process_data(dat_path,length_triangle,a,b,allowed_particles,max_bias)
                 ## append dataframes and shower info
                 shower_summary=(shower_info,df_det1,df_det2,df_det3,det_0)
                 all_showers_data.append(shower_summary)
